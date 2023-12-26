@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha256-yIDrPSXHZdOZhAqiBP7CKzIwMQmRCJ8UeB8Jo17YC4o=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"devinx3.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.19.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="6. registerBeanPostProcessors 定位: org.springframework.context.support.AbstractApplicationContext#registerBeanPostProcessors  123456&#x2F;** * 实例化并注册所有BeanPostProcessor Bean，并遵守显式顺序（如果给定的话）。必须在应用程序Bean的任何实例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 源码之核心加载方法(6) 注册 BeanPostProcessor">
+<meta property="og:url" content="https://devinx3.github.io/2020/10/25/spring/Spring09/index.html">
+<meta property="og:site_name" content="Devin&#39;s Blogs">
+<meta property="og:description" content="6. registerBeanPostProcessors 定位: org.springframework.context.support.AbstractApplicationContext#registerBeanPostProcessors  123456&#x2F;** * 实例化并注册所有BeanPostProcessor Bean，并遵守显式顺序（如果给定的话）。必须在应用程序Bean的任何实例">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-25T14:49:09.000Z">
+<meta property="article:modified_time" content="2023-12-26T15:24:56.505Z">
+<meta property="article:author" content="Devin Li">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://devinx3.github.io/2020/10/25/spring/Spring09/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://devinx3.github.io/2020/10/25/spring/Spring09/","path":"2020/10/25/spring/Spring09/","title":"Spring 源码之核心加载方法(6) 注册 BeanPostProcessor"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring 源码之核心加载方法(6) 注册 BeanPostProcessor | Devin's Blogs</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Devin's Blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人点滴记录</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-registerBeanPostProcessors"><span class="nav-number">1.</span> <span class="nav-text">6. registerBeanPostProcessors</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-PostProcessorRegistrationDelegate-registerBeanPostProcessors"><span class="nav-number">1.1.</span> <span class="nav-text">6.1 PostProcessorRegistrationDelegate#registerBeanPostProcessors</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Devin Li"
+      src="/images/panda.jpg">
+  <p class="site-author-name" itemprop="name">Devin Li</p>
+  <div class="site-description" itemprop="description">不积跬步，无以至千里；不积小流，无以成江海</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/devinx3" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;devinx3" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:devinx3@163.com" title="E-Mail → mailto:devinx3@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://devinx3.github.io/2020/10/25/spring/Spring09/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/panda.jpg">
+      <meta itemprop="name" content="Devin Li">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Devin's Blogs">
+      <meta itemprop="description" content="不积跬步，无以至千里；不积小流，无以成江海">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Spring 源码之核心加载方法(6) 注册 BeanPostProcessor | Devin's Blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring 源码之核心加载方法(6) 注册 BeanPostProcessor
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-10-25 22:49:09" itemprop="dateCreated datePublished" datetime="2020-10-25T22:49:09+08:00">2020-10-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-12-26 23:24:56" itemprop="dateModified" datetime="2023-12-26T23:24:56+08:00">2023-12-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="6-registerBeanPostProcessors"><a href="#6-registerBeanPostProcessors" class="headerlink" title="6. registerBeanPostProcessors"></a>6. registerBeanPostProcessors</h2><blockquote>
+<p><strong>定位</strong>: org.springframework.context.support.AbstractApplicationContext#registerBeanPostProcessors</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 实例化并注册所有BeanPostProcessor Bean，并遵守显式顺序（如果给定的话）。必须在应用程序Bean的任何实例化之前调用。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">registerBeanPostProcessors</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> &#123;</span><br><span class="line">   PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, <span class="built_in">this</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="6-1-PostProcessorRegistrationDelegate-registerBeanPostProcessors"><a href="#6-1-PostProcessorRegistrationDelegate-registerBeanPostProcessors" class="headerlink" title="6.1 PostProcessorRegistrationDelegate#registerBeanPostProcessors"></a>6.1 PostProcessorRegistrationDelegate#registerBeanPostProcessors</h3><blockquote>
+<p><strong>定位</strong>: org.springframework.context.support.PostProcessorRegistrationDelegate#registerBeanPostProcessors(ConfigurableListableBeanFactory, AbstractApplicationContext)</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">registerBeanPostProcessors</span><span class="params">(</span></span><br><span class="line"><span class="params">      ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext)</span> &#123;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// 找出所有实现了 BeanPostProcessor 接口的类的名称</span></span><br><span class="line">   String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, <span class="literal">true</span>, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Register BeanPostProcessorChecker that logs an info message when</span></span><br><span class="line">   <span class="comment">// a bean is created during BeanPostProcessor instantiation, i.e. when</span></span><br><span class="line">   <span class="comment">// a bean is not eligible for getting processed by all BeanPostProcessors.</span></span><br><span class="line">   <span class="comment">// 预计 BeanPostProcessor实现类 目标个数</span></span><br><span class="line">   <span class="comment">// 此处为什么要+1呢？ 原因: 在此方法的最后会添加一个 BeanPostProcessorChecker 的类</span></span><br><span class="line">   <span class="type">int</span> <span class="variable">beanProcessorTargetCount</span> <span class="operator">=</span> beanFactory.getBeanPostProcessorCount() + <span class="number">1</span> + postProcessorNames.length;</span><br><span class="line">   <span class="comment">// 添加BeanPostProcessorChecker(主要用于记录信息)到beanFactory中</span></span><br><span class="line">   beanFactory.addBeanPostProcessor(<span class="keyword">new</span> <span class="title class_">BeanPostProcessorChecker</span>(beanFactory, beanProcessorTargetCount));</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Separate between BeanPostProcessors that implement PriorityOrdered,</span></span><br><span class="line">   <span class="comment">// Ordered, and the rest.</span></span><br><span class="line">   <span class="comment">// 存放实现了 PriorityOrdered 接口的 BeanPostProcessor 集合</span></span><br><span class="line">   List&lt;BeanPostProcessor&gt; priorityOrderedPostProcessors = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">   <span class="comment">// 存放 Spring 内部实现了 BeanPostProcessor 的实例</span></span><br><span class="line">   List&lt;BeanPostProcessor&gt; internalPostProcessors = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">   <span class="comment">// 存放实现了 Ordered 接口的 BeanPostProcessor 的 beanName 集合</span></span><br><span class="line">   List&lt;String&gt; orderedPostProcessorNames = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">   <span class="comment">// 存放普通(未实现排序接口)的 BeanPostProcessor 实例</span></span><br><span class="line">   List&lt;String&gt; nonOrderedPostProcessorNames = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">   <span class="keyword">for</span> (String ppName : postProcessorNames) &#123;</span><br><span class="line">      <span class="comment">// 如果 ppName 对应的 BeanPostProcessor 实例实现了 PriorityOrdered 接口，</span></span><br><span class="line">      <span class="comment">// 则获取到 ppName 对应的 BeanPostProcessor 的实例添加到 priorityOrderedPostProcessors 中</span></span><br><span class="line">      <span class="keyword">if</span> (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) &#123;</span><br><span class="line">         <span class="type">BeanPostProcessor</span> <span class="variable">pp</span> <span class="operator">=</span> beanFactory.getBean(ppName, BeanPostProcessor.class);</span><br><span class="line">         priorityOrderedPostProcessors.add(pp);</span><br><span class="line">         <span class="keyword">if</span> (pp <span class="keyword">instanceof</span> MergedBeanDefinitionPostProcessor) &#123;</span><br><span class="line">            <span class="comment">// Spring内部实现了BeanPostProcessor的实例</span></span><br><span class="line">            internalPostProcessors.add(pp);</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 如果 ppName 对应的 BeanPostProcessor 实例没有实现 PriorityOrdered 接口，但是实现了 Ordered 接口，</span></span><br><span class="line">      <span class="comment">// 那么则将 ppName 对应的 bean 实例添加到 orderedPostProcessorNames 中</span></span><br><span class="line">      <span class="keyword">else</span> <span class="keyword">if</span> (beanFactory.isTypeMatch(ppName, Ordered.class)) &#123;</span><br><span class="line">         orderedPostProcessorNames.add(ppName);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">// 将ppName添加到nonOrderedPostProcessorNames中</span></span><br><span class="line">         nonOrderedPostProcessorNames.add(ppName);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// First, register the BeanPostProcessors that implement PriorityOrdered.</span></span><br><span class="line">   <span class="comment">// 1. 注册实现了 PriorityOrdered 接口的 BeanFactoryPostProcessors 实例对象</span></span><br><span class="line">   <span class="comment">// 对实现了 PriorityOrdered 接口的 BeanPostProcessor 实例集合进行排序操作</span></span><br><span class="line">   sortPostProcessors(priorityOrderedPostProcessors, beanFactory);</span><br><span class="line">   <span class="comment">// 注册实现了 PriorityOrdered 接口的 BeanPostProcessor 实例对象添加到 beanFactory 中</span></span><br><span class="line">   registerBeanPostProcessors(beanFactory, priorityOrderedPostProcessors);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Next, register the BeanPostProcessors that implement Ordered.</span></span><br><span class="line">   <span class="comment">// 2. 注册实现 Ordered 的 BeanFactoryPostProcessors 实例对象</span></span><br><span class="line">   List&lt;BeanPostProcessor&gt; orderedPostProcessors = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(orderedPostProcessorNames.size());</span><br><span class="line">   <span class="keyword">for</span> (String ppName : orderedPostProcessorNames) &#123;</span><br><span class="line">      <span class="comment">// 根据 ppName 找到对应的 BeanPostProcessor 实例对象</span></span><br><span class="line">      <span class="type">BeanPostProcessor</span> <span class="variable">pp</span> <span class="operator">=</span> beanFactory.getBean(ppName, BeanPostProcessor.class);</span><br><span class="line">      <span class="comment">// 将实现了 Ordered 接口的 BeanPostProcessor 添加到 orderedPostProcessors 集合中</span></span><br><span class="line">      orderedPostProcessors.add(pp);</span><br><span class="line">      <span class="comment">// 如果 ppName 对应的 BeanPostProcessor 实例也实现了 MergedBeanDefinitionPostProcessor 接口，</span></span><br><span class="line">      <span class="comment">// 那么则将 ppName 对应的 bean 实例添加到 internalPostProcessors 中</span></span><br><span class="line">      <span class="keyword">if</span> (pp <span class="keyword">instanceof</span> MergedBeanDefinitionPostProcessor) &#123;</span><br><span class="line">         <span class="comment">// Spring内部实现了 BeanPostProcessor 的实例</span></span><br><span class="line">         internalPostProcessors.add(pp);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 对实现了 Ordered 接口的 BeanPostProcessor 实例集合进行排序操作</span></span><br><span class="line">   sortPostProcessors(orderedPostProcessors, beanFactory);</span><br><span class="line">   <span class="comment">// 注册实现了 Ordered 接口的 BeanPostProcessor 实例对象添加到 beanFactory 中</span></span><br><span class="line">   registerBeanPostProcessors(beanFactory, orderedPostProcessors);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Now, register all regular BeanPostProcessors.</span></span><br><span class="line">   <span class="comment">// 3. 注册普通(没有实现排序接口)的 BeanFactoryPostProcessors 实例对象</span></span><br><span class="line">   List&lt;BeanPostProcessor&gt; nonOrderedPostProcessors = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(nonOrderedPostProcessorNames.size());</span><br><span class="line">   <span class="keyword">for</span> (String ppName : nonOrderedPostProcessorNames) &#123;</span><br><span class="line">      <span class="comment">// 根据 ppName 获取对应的 BeanPostProcessor 实例对象</span></span><br><span class="line">      <span class="type">BeanPostProcessor</span> <span class="variable">pp</span> <span class="operator">=</span> beanFactory.getBean(ppName, BeanPostProcessor.class);</span><br><span class="line">      <span class="comment">// 将普通的 BeanPostProcessor 添加到 nonOrderedPostProcessors 集合中</span></span><br><span class="line">      nonOrderedPostProcessors.add(pp);</span><br><span class="line">      <span class="comment">// 如果 ppName 对应的 BeanPostProcessor 实例也实现了 MergedBeanDefinitionPostProcessor 接口，</span></span><br><span class="line">      <span class="comment">// 那么则将 ppName 对应的 bean 实例添加到 internalPostProcessors 中</span></span><br><span class="line">      <span class="keyword">if</span> (pp <span class="keyword">instanceof</span> MergedBeanDefinitionPostProcessor) &#123;</span><br><span class="line">         <span class="comment">// Spring 内部实现了 BeanPostProcessor 的实例</span></span><br><span class="line">         internalPostProcessors.add(pp);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 注册普通的 BeanPostProcessor 实例添加到 beanFactory 中</span></span><br><span class="line">   registerBeanPostProcessors(beanFactory, nonOrderedPostProcessors);  <span class="comment">// 注册</span></span><br><span class="line"></span><br><span class="line">   <span class="comment">// Finally, re-register all internal BeanPostProcessors.</span></span><br><span class="line">   <span class="comment">// 4. 注册所有 Spring 内部的 BeanPostProcessors 实例(实现了MergedBeanDefinitionPostProcessor接口)</span></span><br><span class="line">   sortPostProcessors(internalPostProcessors, beanFactory);</span><br><span class="line">   <span class="comment">// Spring 内部的 BeanPostProcessors 实例(实现了 MergedBeanDefinitionPostProcessor 接口)</span></span><br><span class="line">   registerBeanPostProcessors(beanFactory, internalPostProcessors);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Re-register post-processor for detecting inner beans as ApplicationListeners,</span></span><br><span class="line">   <span class="comment">// moving it to the end of the processor chain (for picking up proxies etc).</span></span><br><span class="line">   <span class="comment">// 最后，再置换一个新的ApplicationListenerDetector.  ApplicationListenerDetector 已重写 equals 方法.</span></span><br><span class="line">   <span class="comment">// 置换的原因是因为旧bean的属性singletonNames中已经存在有bdName了。</span></span><br><span class="line">   beanFactory.addBeanPostProcessor(<span class="keyword">new</span> <span class="title class_">ApplicationListenerDetector</span>(applicationContext));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/10/25/spring/Spring08/" rel="prev" title="Spring 源码之核心加载方法(5) 执行 BeanFactoryPostProcessor">
+                  <i class="fa fa-angle-left"></i> Spring 源码之核心加载方法(5) 执行 BeanFactoryPostProcessor
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/10/25/spring/Spring10/" rel="next" title="Spring 源码之核心加载方法(7) 初始化消息资源">
+                  Spring 源码之核心加载方法(7) 初始化消息资源 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Devin Li</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

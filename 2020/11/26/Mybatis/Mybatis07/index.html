@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha256-yIDrPSXHZdOZhAqiBP7CKzIwMQmRCJ8UeB8Jo17YC4o=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"devinx3.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.19.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="流程图https:&#x2F;&#x2F;www.processon.com&#x2F;view&#x2F;link&#x2F;655098457b996f7b645b6afe    更新 定位: org.apache.ibatis.session.defaults.DefaultSqlSession#update  12345678910111213public int update(String statement, Object param">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mybatis 源码之更新数据库">
+<meta property="og:url" content="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis07/index.html">
+<meta property="og:site_name" content="Devin&#39;s Blogs">
+<meta property="og:description" content="流程图https:&#x2F;&#x2F;www.processon.com&#x2F;view&#x2F;link&#x2F;655098457b996f7b645b6afe    更新 定位: org.apache.ibatis.session.defaults.DefaultSqlSession#update  12345678910111213public int update(String statement, Object param">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-26T14:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-26T15:24:56.501Z">
+<meta property="article:author" content="Devin Li">
+<meta property="article:tag" content="Mybatis">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="笔记">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis07/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://devinx3.github.io/2020/11/26/Mybatis/Mybatis07/","path":"2020/11/26/Mybatis/Mybatis07/","title":"Mybatis 源码之更新数据库"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Mybatis 源码之更新数据库 | Devin's Blogs</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Devin's Blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人点滴记录</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">流程图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0"><span class="nav-number">2.</span> <span class="nav-text">更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E5%85%A5"><span class="nav-number">3.</span> <span class="nav-text">插入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PreparedStatementHandler-%E6%9B%B4%E6%96%B0"><span class="nav-number">3.1.</span> <span class="nav-text">PreparedStatementHandler 更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">4.</span> <span class="nav-text">删除</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Devin Li"
+      src="/images/panda.jpg">
+  <p class="site-author-name" itemprop="name">Devin Li</p>
+  <div class="site-description" itemprop="description">不积跬步，无以至千里；不积小流，无以成江海</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/devinx3" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;devinx3" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:devinx3@163.com" title="E-Mail → mailto:devinx3@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis07/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/panda.jpg">
+      <meta itemprop="name" content="Devin Li">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Devin's Blogs">
+      <meta itemprop="description" content="不积跬步，无以至千里；不积小流，无以成江海">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Mybatis 源码之更新数据库 | Devin's Blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mybatis 源码之更新数据库
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-11-26 22:00:00" itemprop="dateCreated datePublished" datetime="2020-11-26T22:00:00+08:00">2020-11-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-12-26 23:24:56" itemprop="dateModified" datetime="2023-12-26T23:24:56+08:00">2023-12-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p><a target="_blank" rel="noopener" href="https://www.processon.com/view/link/655098457b996f7b645b6afe">https://www.processon.com/view/link/655098457b996f7b645b6afe</a></p>
+<iframe id="embed_dom" name="embed_dom" frameborder="0" style="width:489px; height:275px;" src="https://www.processon.com/embed/655093e59750447ca926f509"></iframe>
+
+
+<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.session.defaults.DefaultSqlSession#update</code></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">update</span><span class="params">(String statement, Object parameter)</span> &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//每次要更新之前，dirty标志设为true</span></span><br><span class="line">    dirty = <span class="literal">true</span>;</span><br><span class="line">    <span class="type">MappedStatement</span> <span class="variable">ms</span> <span class="operator">=</span> configuration.getMappedStatement(statement);</span><br><span class="line">    <span class="comment">// 用执行器来update结果</span></span><br><span class="line">    <span class="keyword">return</span> executor.update(ms, wrapCollection(parameter));</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">&quot;Error updating database.  Cause: &quot;</span> + e, e);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    ErrorContext.instance().reset();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>org.apache.ibatis.executor.CachingExecutor#update</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">update</span><span class="params">(MappedStatement ms, Object parameterObject)</span> <span class="keyword">throws</span> SQLException &#123;  </span><br><span class="line"><span class="comment">// 刷新二级缓存完再 update</span></span><br><span class="line">flushCacheIfRequired(ms);</span><br><span class="line"><span class="keyword">return</span> delegate.update(ms, parameterObject);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>org.apache.ibatis.executor.BaseExecutor#update</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SqlSession.update/insert/delete 都会调用此方法</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">update</span><span class="params">(MappedStatement ms, Object parameter)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">&quot;executing an update&quot;</span>).object(ms.getId());</span><br><span class="line">  <span class="comment">// 判断当前Executor是否已经关闭</span></span><br><span class="line">  <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExecutorException</span>(<span class="string">&quot;Executor was closed.&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 先清局部缓存(一级缓存)，再更新，如何更新交由子类，模板方法模式</span></span><br><span class="line">  clearLocalCache();</span><br><span class="line">  <span class="comment">// 执行sql语句</span></span><br><span class="line">  <span class="keyword">return</span> doUpdate(ms, parameter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>org.apache.ibatis.executor.SimpleExecutor#doUpdate</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">doUpdate</span><span class="params">(MappedStatement ms, Object parameter)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">Statement</span> <span class="variable">stmt</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> ms.getConfiguration();</span><br><span class="line">    <span class="comment">// 新建一个 StatementHandler</span></span><br><span class="line">    <span class="comment">// 这里看到 ResultHandler 传入的是 null</span></span><br><span class="line">    <span class="type">StatementHandler</span> <span class="variable">handler</span> <span class="operator">=</span> configuration.newStatementHandler(<span class="built_in">this</span>, ms, parameter, RowBounds.DEFAULT, <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line">    <span class="comment">// 准备语句</span></span><br><span class="line">    stmt = prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">    <span class="keyword">return</span> handler.update(stmt);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    closeStatement(stmt);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>org.apache.ibatis.executor.statement.PreparedStatementHandler#update</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">update</span><span class="params">(Statement statement)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">PreparedStatement</span> <span class="variable">ps</span> <span class="operator">=</span> (PreparedStatement) statement;</span><br><span class="line">  <span class="comment">// 调用 PreparedStatement.execute</span></span><br><span class="line">  ps.execute();</span><br><span class="line">  <span class="comment">// 调用 PreparedStatement.getUpdateCount</span></span><br><span class="line">  <span class="type">int</span> <span class="variable">rows</span> <span class="operator">=</span> ps.getUpdateCount();</span><br><span class="line">  <span class="comment">// 获取实际入参</span></span><br><span class="line">  <span class="type">Object</span> <span class="variable">parameterObject</span> <span class="operator">=</span> boundSql.getParameterObject();</span><br><span class="line">  <span class="comment">// 若配置了 useGeneratedKeys 并且是 insert 语句, </span></span><br><span class="line">  <span class="comment">// 则返回 Jdbc3KeyGenerator.INSTANCE, 否则返回 NoKeyGenerator.INSTANCE</span></span><br><span class="line">  <span class="comment">// 若配置了 sekectKey, 则使用 SelectKeyGenerator 的实例</span></span><br><span class="line">  <span class="type">KeyGenerator</span> <span class="variable">keyGenerator</span> <span class="operator">=</span> mappedStatement.getKeyGenerator();</span><br><span class="line">  <span class="comment">// 执行主键生成器的后置方法, 主要给入参设置对应的主键值</span></span><br><span class="line">  keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);</span><br><span class="line">  <span class="comment">// 返回更新的行数</span></span><br><span class="line">  <span class="keyword">return</span> rows;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h2><p><code>org.apache.ibatis.session.defaults.DefaultSqlSession#insert</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">insert</span><span class="params">(String statement)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> insert(statement, <span class="literal">null</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">insert</span><span class="params">(String statement, Object parameter)</span> &#123;</span><br><span class="line">  <span class="comment">// 调用更新</span></span><br><span class="line">  <span class="keyword">return</span> update(statement, parameter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="PreparedStatementHandler-更新"><a href="#PreparedStatementHandler-更新" class="headerlink" title="PreparedStatementHandler 更新"></a>PreparedStatementHandler 更新</h3><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.executor.statement.BaseStatementHandler#BaseStatementHandler</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>： 语句处理器的基类, 其子类有<code>PreparedStatementHandler</code>, <code>SimpleStatementHandler</code>, <code>CallableStatementHandler</code></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="title function_">BaseStatementHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> &#123;</span><br><span class="line">  <span class="comment">// 初始化字段</span></span><br><span class="line">  <span class="built_in">this</span>.configuration = mappedStatement.getConfiguration();</span><br><span class="line">  <span class="built_in">this</span>.executor = executor;</span><br><span class="line">  <span class="built_in">this</span>.mappedStatement = mappedStatement;</span><br><span class="line">  <span class="built_in">this</span>.rowBounds = rowBounds;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">this</span>.typeHandlerRegistry = configuration.getTypeHandlerRegistry();</span><br><span class="line">  <span class="built_in">this</span>.objectFactory = configuration.getObjectFactory();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (boundSql == <span class="literal">null</span>) &#123; <span class="comment">// issue #435, get the key before calculating the statement</span></span><br><span class="line">    <span class="comment">// 调用 KeyGenerator.processBefore方法获取主键</span></span><br><span class="line">    generateKeys(parameterObject);</span><br><span class="line">    boundSql = mappedStatement.getBoundSql(parameterObject);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">this</span>.boundSql = boundSql;</span><br><span class="line">  <span class="comment">// 生成 parameterHandler</span></span><br><span class="line">  <span class="built_in">this</span>.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);</span><br><span class="line">  <span class="comment">// 生成 resultSetHandler</span></span><br><span class="line">  <span class="built_in">this</span>.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 生成 key</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">generateKeys</span><span class="params">(Object parameter)</span> &#123;</span><br><span class="line">  <span class="type">KeyGenerator</span> <span class="variable">keyGenerator</span> <span class="operator">=</span> mappedStatement.getKeyGenerator();</span><br><span class="line">  ErrorContext.instance().store();</span><br><span class="line">  <span class="comment">// 调用主键生成器的前置方法</span></span><br><span class="line">  keyGenerator.processBefore(executor, mappedStatement, <span class="literal">null</span>, parameter);</span><br><span class="line">  ErrorContext.instance().recall();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator</code></p>
+<p>主键生成器, 默认使用数据库的生成策略, 将生成后的主键赋值到入参对应的字段中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">processBefore</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span> &#123;</span><br><span class="line">  <span class="comment">// do nothing</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">processAfter</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span> &#123;</span><br><span class="line">  <span class="comment">// 将用户传入的实参 parameter 封装成集合类型，然后传入 processBatch 方法中处理</span></span><br><span class="line">  processBatch(ms, stmt, parameter);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">processBatch</span><span class="params">(MappedStatement ms, Statement stmt, Object parameter)</span> &#123;</span><br><span class="line">  <span class="comment">// 获取 keyProperties 属性指定的属性名称，它表示主键对应的属性名称</span></span><br><span class="line">  <span class="keyword">final</span> String[] keyProperties = ms.getKeyProperties();</span><br><span class="line">  <span class="keyword">if</span> (keyProperties == <span class="literal">null</span> || keyProperties.length == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 核心是使用 JDBC3 的 Statement.getGeneratedKeys</span></span><br><span class="line">  <span class="keyword">try</span> (<span class="type">ResultSet</span> <span class="variable">rs</span> <span class="operator">=</span> stmt.getGeneratedKeys()) &#123;</span><br><span class="line">    <span class="comment">// 获取ResultSet的元数据信息</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">ResultSetMetaData</span> <span class="variable">rsmd</span> <span class="operator">=</span> rs.getMetaData();</span><br><span class="line">    <span class="keyword">final</span> <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> ms.getConfiguration();</span><br><span class="line">    <span class="comment">// 检测数据库生成的主键的列数与 keyProperties 属性指定的列数是否匹配</span></span><br><span class="line">    <span class="keyword">if</span> (rsmd.getColumnCount() &lt; keyProperties.length) &#123;</span><br><span class="line">      <span class="comment">// Error?</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 主键列的值赋值到入参对象中</span></span><br><span class="line">      assignKeys(configuration, rs, rsmd, keyProperties, parameter);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExecutorException</span>(<span class="string">&quot;Error getting generated key or setting result to parameter object. Cause: &quot;</span> + e, e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><p><code>org.apache.ibatis.session.defaults.DefaultSqlSession#delete</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">delete</span><span class="params">(String statement)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> update(statement, <span class="literal">null</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">delete</span><span class="params">(String statement, Object parameter)</span> &#123;</span><br><span class="line">  <span class="comment">// delete 也是调用更新</span></span><br><span class="line">  <span class="keyword">return</span> update(statement, parameter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Mybatis/" rel="tag"># Mybatis</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/26/Mybatis/Mybatis08/" rel="prev" title="Mybatis 源码整合 Spring">
+                  <i class="fa fa-angle-left"></i> Mybatis 源码整合 Spring
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/26/Mybatis/Mybatis06/" rel="next" title="Mybatis 源码之数据库结果集">
+                  Mybatis 源码之数据库结果集 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Devin Li</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

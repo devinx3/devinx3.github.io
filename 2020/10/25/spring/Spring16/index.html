@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha256-yIDrPSXHZdOZhAqiBP7CKzIwMQmRCJ8UeB8Jo17YC4o=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"devinx3.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.19.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="1. 核心接口 BeanPostProcessor   123public interface BeanFactoryPostProcessor &amp;#123;   void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;&amp;#125;  1.2 常用接口1.2.1 B">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 源码之核心加载方法 常用扩展点接口">
+<meta property="og:url" content="https://devinx3.github.io/2020/10/25/spring/Spring16/index.html">
+<meta property="og:site_name" content="Devin&#39;s Blogs">
+<meta property="og:description" content="1. 核心接口 BeanPostProcessor   123public interface BeanFactoryPostProcessor &amp;#123;   void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;&amp;#125;  1.2 常用接口1.2.1 B">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-25T14:49:16.000Z">
+<meta property="article:modified_time" content="2023-12-26T15:24:56.509Z">
+<meta property="article:author" content="Devin Li">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://devinx3.github.io/2020/10/25/spring/Spring16/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://devinx3.github.io/2020/10/25/spring/Spring16/","path":"2020/10/25/spring/Spring16/","title":"Spring 源码之核心加载方法 常用扩展点接口"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring 源码之核心加载方法 常用扩展点接口 | Devin's Blogs</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Devin's Blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人点滴记录</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%A0%B8%E5%BF%83%E6%8E%A5%E5%8F%A3-BeanPostProcessor"><span class="nav-number">1.</span> <span class="nav-text">1. 核心接口 BeanPostProcessor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E5%B8%B8%E7%94%A8%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.1.</span> <span class="nav-text">1.2 常用接口</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-BeanDefinitionRegistryPostProcessor"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.2.1 BeanDefinitionRegistryPostProcessor</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E5%B8%B8%E7%94%A8%E5%AE%9E%E7%8E%B0%E7%B1%BB"><span class="nav-number">1.2.</span> <span class="nav-text">1.3 常用实现类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-ConfigurationClassPostProcessor"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.3.1 ConfigurationClassPostProcessor</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%A0%B8%E5%BF%83%E6%8E%A5%E5%8F%A3-BeanPostProcessor"><span class="nav-number">2.</span> <span class="nav-text">2. 核心接口 BeanPostProcessor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E5%B8%B8%E7%94%A8%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.1.</span> <span class="nav-text">2.2 常用接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E5%B8%B8%E7%94%A8%E6%8E%A5%E5%8F%A3%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-number">2.2.</span> <span class="nav-text">2.3 常用接口执行顺序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-1-InstantiationAwareBeanPostProcessor-postProcessBeforeInstantiation"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">2.3.1 InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-2-SmartInstantiationAwareBeanPostProcessor-determineCandidateConstructors"><span class="nav-number">2.2.0.2.</span> <span class="nav-text">2.3.2 SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-3-MergedBeanDefinitionPostProcessor-postProcessMergedBeanDefinition"><span class="nav-number">2.2.0.3.</span> <span class="nav-text">2.3.3 MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-4-SmartInstantiationAwareBeanPostProcessor-getEarlyBeanReference"><span class="nav-number">2.2.0.4.</span> <span class="nav-text">2.3.4 SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-5-InstantiationAwareBeanPostProcessor-postProcessAfterInstantiation"><span class="nav-number">2.2.0.5.</span> <span class="nav-text">2.3.5 InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-6-InstantiationAwareBeanPostProcessor-postProcessProperties"><span class="nav-number">2.2.0.6.</span> <span class="nav-text">2.3.6 InstantiationAwareBeanPostProcessor#postProcessProperties</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-7-BeanPostProcessor-postProcessBeforeInitialization"><span class="nav-number">2.2.0.7.</span> <span class="nav-text">2.3.7 BeanPostProcessor#postProcessBeforeInitialization</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-8-InitializingBean-afterPropertiesSet"><span class="nav-number">2.2.0.8.</span> <span class="nav-text">2.3.8 InitializingBean#afterPropertiesSet</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-9-BeanPostProcessor-postProcessAfterInitialization"><span class="nav-number">2.2.0.9.</span> <span class="nav-text">2.3.9 BeanPostProcessor#postProcessAfterInitialization</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-10-DestructionAwareBeanPostProcessor-postProcessBeforeDestruction"><span class="nav-number">2.2.0.10.</span> <span class="nav-text">2.3.10 DestructionAwareBeanPostProcessor#postProcessBeforeDestruction</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-10-DisposableBean-destroy"><span class="nav-number">2.2.0.11.</span> <span class="nav-text">2.3.10 DisposableBean#destroy</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-%E6%8E%A5%E5%8F%A3%E6%97%A0%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="nav-number">2.3.</span> <span class="nav-text">2.4 接口无执行顺序</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-4-1-SmartInstantiationAwareBeanPostProcessor-predictBeanType"><span class="nav-number">2.3.0.1.</span> <span class="nav-text">2.4.1 SmartInstantiationAwareBeanPostProcessor#predictBeanType</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%8E%A5%E5%8F%A3-SmartInitializingSingleton"><span class="nav-number">3.</span> <span class="nav-text">3. 接口 SmartInitializingSingleton</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-org-springframework-beans-factory-SmartInitializingSingleton"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 org.springframework.beans.factory.SmartInitializingSingleton</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Devin Li"
+      src="/images/panda.jpg">
+  <p class="site-author-name" itemprop="name">Devin Li</p>
+  <div class="site-description" itemprop="description">不积跬步，无以至千里；不积小流，无以成江海</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/devinx3" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;devinx3" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:devinx3@163.com" title="E-Mail → mailto:devinx3@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://devinx3.github.io/2020/10/25/spring/Spring16/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/panda.jpg">
+      <meta itemprop="name" content="Devin Li">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Devin's Blogs">
+      <meta itemprop="description" content="不积跬步，无以至千里；不积小流，无以成江海">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Spring 源码之核心加载方法 常用扩展点接口 | Devin's Blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring 源码之核心加载方法 常用扩展点接口
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-10-25 22:49:16" itemprop="dateCreated datePublished" datetime="2020-10-25T22:49:16+08:00">2020-10-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-12-26 23:24:56" itemprop="dateModified" datetime="2023-12-26T23:24:56+08:00">2023-12-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="1-核心接口-BeanPostProcessor"><a href="#1-核心接口-BeanPostProcessor" class="headerlink" title="1. 核心接口 BeanPostProcessor"></a>1. 核心接口 BeanPostProcessor</h2>   <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BeanFactoryPostProcessor</span> &#123;</span><br><span class="line">   <span class="keyword">void</span> <span class="title function_">postProcessBeanFactory</span><span class="params">(ConfigurableListableBeanFactory beanFactory)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-常用接口"><a href="#1-2-常用接口" class="headerlink" title="1.2 常用接口"></a>1.2 常用接口</h3><h4 id="1-2-1-BeanDefinitionRegistryPostProcessor"><a href="#1-2-1-BeanDefinitionRegistryPostProcessor" class="headerlink" title="1.2.1 BeanDefinitionRegistryPostProcessor"></a>1.2.1 BeanDefinitionRegistryPostProcessor</h4><p><strong>调用方法</strong>: PostProcessorRegistrationDelegate#invokeBeanFactoryPostProcessors</p>
+<p><strong>时机</strong>: <code>BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry</code> 会优先于 <code>BeanPostProcessor #postProcessBeanFactory</code> 方法的执行</p>
+<p><strong>作用</strong>: 所有 BeanDefinition 加载完成之后, 提供增删改查 BeanDefinitionRegistry (注册表) 的埋点</p>
+<h3 id="1-3-常用实现类"><a href="#1-3-常用实现类" class="headerlink" title="1.3 常用实现类"></a>1.3 常用实现类</h3><h4 id="1-3-1-ConfigurationClassPostProcessor"><a href="#1-3-1-ConfigurationClassPostProcessor" class="headerlink" title="1.3.1 ConfigurationClassPostProcessor"></a>1.3.1 ConfigurationClassPostProcessor</h4><p><strong>作用</strong>: 它是用来解析配置类的,  可解析类注解 @Configuration, @CompentScan 等</p>
+<h2 id="2-核心接口-BeanPostProcessor"><a href="#2-核心接口-BeanPostProcessor" class="headerlink" title="2. 核心接口 BeanPostProcessor"></a>2. 核心接口 BeanPostProcessor</h2><figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> interface BeanPostProcessor &#123;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">default</span> <span class="built_in">Object</span> <span class="title function_">postProcessBeforeInitialization</span>(<span class="built_in">Object</span> bean, <span class="built_in">String</span> beanName) <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">      <span class="keyword">return</span> bean;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">default</span> <span class="built_in">Object</span> <span class="title function_">postProcessAfterInitialization</span>(<span class="built_in">Object</span> bean, <span class="built_in">String</span> beanName) <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">      <span class="keyword">return</span> bean;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-2-常用接口"><a href="#2-2-常用接口" class="headerlink" title="2.2 常用接口"></a>2.2 常用接口</h3><ol>
+<li>SmartInstantiationAwareBeanPostProcessor</li>
+<li>MergedBeanDefinitionPostProcessor</li>
+<li>InstantiationAwareBeanPostProcessor</li>
+<li>DestructionAwareBeanPostProcessor</li>
+</ol>
+<h3 id="2-3-常用接口执行顺序"><a href="#2-3-常用接口执行顺序" class="headerlink" title="2.3 常用接口执行顺序"></a>2.3 常用接口执行顺序</h3><h5 id="2-3-1-InstantiationAwareBeanPostProcessor-postProcessBeforeInstantiation"><a href="#2-3-1-InstantiationAwareBeanPostProcessor-postProcessBeforeInstantiation" class="headerlink" title="2.3.1 InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation"></a>2.3.1 InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation</h5><p><strong>调用方法</strong>:<code>AbstractAutowireCapableBeanFactory#resolveBeforeInstantiation ===&gt;&gt;&gt; #applyBeanPostProcessorsBeforeInstantiation</code></p>
+<p><strong>作用</strong>: 在实例化目标 bean 之前调用这个 BeanPostProcessor。返回的 bean 对象可以是一个代理来代替目标 bean，有效地抑制了目标 bean 的默认实例化。</p>
+<h5 id="2-3-2-SmartInstantiationAwareBeanPostProcessor-determineCandidateConstructors"><a href="#2-3-2-SmartInstantiationAwareBeanPostProcessor-determineCandidateConstructors" class="headerlink" title="2.3.2 SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors"></a>2.3.2 SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors</h5><p><strong>调用方法</strong>:<code>AbstractAutowireCapableBeanFactory#determineConstructorsFromBeanPostProcessors</code></p>
+<p><strong>作用</strong>: 检测Bean的构造器，可以检测出多个候选构造器，再有相应的策略决定使用哪一个，如AutowiredAnnotationBeanPostProcessor实现将自动扫描通过@Autowired/@Value注解的构造器从而可以完成构造器注入</p>
+<h5 id="2-3-3-MergedBeanDefinitionPostProcessor-postProcessMergedBeanDefinition"><a href="#2-3-3-MergedBeanDefinitionPostProcessor-postProcessMergedBeanDefinition" class="headerlink" title="2.3.3 MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition"></a>2.3.3 MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#applyMergedBeanDefinitionPostProcessors</code></p>
+<p><strong>作用</strong>: 在Bean实例化完毕后调用 可以用来修改Merged BeanDefinition的一些properties 或者用来给后续回调中缓存一些meta信息, 这是将Merged BeanDefinition暴露出来的一个回调</p>
+<h5 id="2-3-4-SmartInstantiationAwareBeanPostProcessor-getEarlyBeanReference"><a href="#2-3-4-SmartInstantiationAwareBeanPostProcessor-getEarlyBeanReference" class="headerlink" title="2.3.4 SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference"></a>2.3.4 SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#getEarlyBeanReference</code></p>
+<p><strong>作用</strong>: 获取早期访问指定 bean 的引用，通常用于解析循环引用。此回调使后处理器有机会尽早公开包装实例，即在目标 bean 实例完全初始化之前。</p>
+<h5 id="2-3-5-InstantiationAwareBeanPostProcessor-postProcessAfterInstantiation"><a href="#2-3-5-InstantiationAwareBeanPostProcessor-postProcessAfterInstantiation" class="headerlink" title="2.3.5 InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation"></a>2.3.5 InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#populateBean</code></p>
+<p><strong>作用</strong>:  在 bean 实例化之后，通过构造函数或工厂方法，但在 Spring 属性填充（从显式属性或自动连接）发生之前，执行操作。这是在 Spring 的自动注入开始之前，在给定 bean 实例上执行<strong>自定义字段注入</strong>的回调。返回值可以终止属性填充。</p>
+<h5 id="2-3-6-InstantiationAwareBeanPostProcessor-postProcessProperties"><a href="#2-3-6-InstantiationAwareBeanPostProcessor-postProcessProperties" class="headerlink" title="2.3.6 InstantiationAwareBeanPostProcessor#postProcessProperties"></a>2.3.6 InstantiationAwareBeanPostProcessor#postProcessProperties</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#populateBean</code></p>
+<p><strong>作用</strong>:  在工厂将给定的属性值赋值到 bean 实例之前，对其进行后处理，而不需要任何属性描述符。</p>
+<h5 id="2-3-7-BeanPostProcessor-postProcessBeforeInitialization"><a href="#2-3-7-BeanPostProcessor-postProcessBeforeInitialization" class="headerlink" title="2.3.7 BeanPostProcessor#postProcessBeforeInitialization"></a>2.3.7 BeanPostProcessor#postProcessBeforeInitialization</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#initializeBean  ===&gt;&gt;&gt; #applyBeanPostProcessorsBeforeInitialization</code></p>
+<p><strong>作用</strong>:  在任何 bean 初始化回调（如InitializingBean的AfterPropertieSet或自定义init方法）<strong>之前</strong>，将此BeanPostProcessor应用于给定的新bean实例。</p>
+<h5 id="2-3-8-InitializingBean-afterPropertiesSet"><a href="#2-3-8-InitializingBean-afterPropertiesSet" class="headerlink" title="2.3.8 InitializingBean#afterPropertiesSet"></a>2.3.8 InitializingBean#afterPropertiesSet</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#invokeInitMethods</code></p>
+<p><strong>作用</strong>:  bean 的初始化方法, 执行完成之后才会执行 自定义的 init 方法</p>
+<h5 id="2-3-9-BeanPostProcessor-postProcessAfterInitialization"><a href="#2-3-9-BeanPostProcessor-postProcessAfterInitialization" class="headerlink" title="2.3.9 BeanPostProcessor#postProcessAfterInitialization"></a>2.3.9 BeanPostProcessor#postProcessAfterInitialization</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#initializeBean ===&gt;&gt;&gt; #applyBeanPostProcessorsAfterInitialization</code></p>
+<p><strong>作用</strong>:  在任何bean初始化回调（如InitializingBean的AfterPropertieSet或自定义init方法）<strong>之后</strong>，将此BeanPostProcessor应用于给定的新bean实例。</p>
+<h5 id="2-3-10-DestructionAwareBeanPostProcessor-postProcessBeforeDestruction"><a href="#2-3-10-DestructionAwareBeanPostProcessor-postProcessBeforeDestruction" class="headerlink" title="2.3.10 DestructionAwareBeanPostProcessor#postProcessBeforeDestruction"></a>2.3.10 DestructionAwareBeanPostProcessor#postProcessBeforeDestruction</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#destroyBean ===&gt;&gt;&gt; DisposableBeanAdapter#destroy</code></p>
+<p><strong>作用</strong>:  在给定bean实例被销毁之前，将此BeanPostProcessor应用于该实例，例如调用自定义销毁回调。与DisposableBean的destroy和自定义destroy方法一样，此回调将仅适用于容器完全管理其生命周期的bean。单例bean和作用域bean通常都是这样。</p>
+<h5 id="2-3-10-DisposableBean-destroy"><a href="#2-3-10-DisposableBean-destroy" class="headerlink" title="2.3.10 DisposableBean#destroy"></a>2.3.10 DisposableBean#destroy</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#destroyBean ===&gt;&gt;&gt; DisposableBeanAdapter#destroy</code></p>
+<p><strong>作用</strong>:  bean 的销毁方法, 执行完成之后才会执行自定义的 destroy 方法</p>
+<h3 id="2-4-接口无执行顺序"><a href="#2-4-接口无执行顺序" class="headerlink" title="2.4 接口无执行顺序"></a>2.4 接口无执行顺序</h3><h5 id="2-4-1-SmartInstantiationAwareBeanPostProcessor-predictBeanType"><a href="#2-4-1-SmartInstantiationAwareBeanPostProcessor-predictBeanType" class="headerlink" title="2.4.1 SmartInstantiationAwareBeanPostProcessor#predictBeanType"></a>2.4.1 SmartInstantiationAwareBeanPostProcessor#predictBeanType</h5><p><strong>调用方法</strong>: <code>AbstractAutowireCapableBeanFactory#predictBeanType</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractApplicationContext#refresh</span></span><br><span class="line"><span class="comment">//   ==&gt; AbstractApplicationContext#registerListeners</span></span><br><span class="line"><span class="comment">//         ==&gt; AbstractApplicationContext#getBeanNamesForType</span></span><br><span class="line"><span class="comment">//               ==&gt;  DefaultListableBeanFactory#doGetBeanNamesForType</span></span><br><span class="line"><span class="comment">//                      ==&gt; AbstractAutowireCapableBeanFactory#predictBeanType</span></span><br><span class="line"><span class="comment">// 被此逻辑触发</span></span><br><span class="line">String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, <span class="literal">true</span>, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>作用</strong>:  用来预判类型的</p>
+<h2 id="3-接口-SmartInitializingSingleton"><a href="#3-接口-SmartInitializingSingleton" class="headerlink" title="3. 接口 SmartInitializingSingleton"></a>3. 接口 SmartInitializingSingleton</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">SmartInitializingSingleton</span> &#123;</span><br><span class="line">   <span class="keyword">void</span> <span class="title function_">afterSingletonsInstantiated</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-1-org-springframework-beans-factory-SmartInitializingSingleton"><a href="#3-1-org-springframework-beans-factory-SmartInitializingSingleton" class="headerlink" title="3.1 org.springframework.beans.factory.SmartInitializingSingleton"></a>3.1 org.springframework.beans.factory.SmartInitializingSingleton</h3><p><strong>调用方法</strong>: <code>org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons</code></p>
+<p><strong>作用</strong>: 所有单例对象加载完成后调用，可以使用此接口回调处理逻辑</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/10/25/spring/Spring15/" rel="prev" title="Spring 源码之核心加载方法(14) 完成后清理">
+                  <i class="fa fa-angle-left"></i> Spring 源码之核心加载方法(14) 完成后清理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/10/26/SpringMVC/SpringMVC00/" rel="next" title="SpringMVC 源码学习">
+                  SpringMVC 源码学习 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Devin Li</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

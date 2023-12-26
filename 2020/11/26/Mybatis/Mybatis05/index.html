@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha256-yIDrPSXHZdOZhAqiBP7CKzIwMQmRCJ8UeB8Jo17YC4o=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"devinx3.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.19.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="主要研究 DefaultSqlSession 对象的查询方法 流程图https:&#x2F;&#x2F;www.processon.com&#x2F;view&#x2F;link&#x2F;655092a17b996f7b645b648d   多行查询 定位: org.apache.ibatis.session.defaults.DefaultSqlSession#selectList   作用: 根据条件查询, 返回 list 集合  123">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mybatis 源码之查询数据库">
+<meta property="og:url" content="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis05/index.html">
+<meta property="og:site_name" content="Devin&#39;s Blogs">
+<meta property="og:description" content="主要研究 DefaultSqlSession 对象的查询方法 流程图https:&#x2F;&#x2F;www.processon.com&#x2F;view&#x2F;link&#x2F;655092a17b996f7b645b648d   多行查询 定位: org.apache.ibatis.session.defaults.DefaultSqlSession#selectList   作用: 根据条件查询, 返回 list 集合  123">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-26T14:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-26T15:24:56.501Z">
+<meta property="article:author" content="Devin Li">
+<meta property="article:tag" content="Mybatis">
+<meta property="article:tag" content="源码">
+<meta property="article:tag" content="笔记">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis05/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://devinx3.github.io/2020/11/26/Mybatis/Mybatis05/","path":"2020/11/26/Mybatis/Mybatis05/","title":"Mybatis 源码之查询数据库"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Mybatis 源码之查询数据库 | Devin's Blogs</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Devin's Blogs</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人点滴记录</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-categories"><a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">流程图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E8%A1%8C%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.</span> <span class="nav-text">多行查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E5%92%8C%E6%8B%A6%E6%88%AA%E5%99%A8"><span class="nav-number">2.1.</span> <span class="nav-text">插件和拦截器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CachingExecutor-%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.2.</span> <span class="nav-text">CachingExecutor 查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BaseExecutor-%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.3.</span> <span class="nav-text">BaseExecutor 查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SimpleExecutor-%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.4.</span> <span class="nav-text">SimpleExecutor 查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PreparedStatementHandler-%E6%9F%A5%E8%AF%A2"><span class="nav-number">2.5.</span> <span class="nav-text">PreparedStatementHandler 查询</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E8%A1%8C%E6%9F%A5%E8%AF%A2-map"><span class="nav-number">3.</span> <span class="nav-text">多行查询(map)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%B8%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.</span> <span class="nav-text">游标查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CachingExecutor-%E6%B8%B8%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.1.</span> <span class="nav-text">CachingExecutor 游标查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BaseExecutor-%E6%B8%B8%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.2.</span> <span class="nav-text">BaseExecutor 游标查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SimpleExecutor-%E6%B8%B8%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.3.</span> <span class="nav-text">SimpleExecutor 游标查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PreparedStatementHandler-%E6%B8%B8%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">4.4.</span> <span class="nav-text">PreparedStatementHandler 游标查询</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Devin Li"
+      src="/images/panda.jpg">
+  <p class="site-author-name" itemprop="name">Devin Li</p>
+  <div class="site-description" itemprop="description">不积跬步，无以至千里；不积小流，无以成江海</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa fa-rss fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/devinx3" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;devinx3" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:devinx3@163.com" title="E-Mail → mailto:devinx3@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://devinx3.github.io/2020/11/26/Mybatis/Mybatis05/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/panda.jpg">
+      <meta itemprop="name" content="Devin Li">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Devin's Blogs">
+      <meta itemprop="description" content="不积跬步，无以至千里；不积小流，无以成江海">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Mybatis 源码之查询数据库 | Devin's Blogs">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mybatis 源码之查询数据库
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-11-26 22:00:00" itemprop="dateCreated datePublished" datetime="2020-11-26T22:00:00+08:00">2020-11-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-12-26 23:24:56" itemprop="dateModified" datetime="2023-12-26T23:24:56+08:00">2023-12-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p> 主要研究 DefaultSqlSession 对象的查询方法</p>
+<h2 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h2><p><a target="_blank" rel="noopener" href="https://www.processon.com/view/link/655092a17b996f7b645b648d">https://www.processon.com/view/link/655092a17b996f7b645b648d</a></p>
+<iframe id="embed_dom" name="embed_dom" frameborder="0" style="width:489px; height:275px;" src="https://www.processon.com/embed/65507926d8ae0c383514f124"></iframe>
+
+<h2 id="多行查询"><a href="#多行查询" class="headerlink" title="多行查询"></a>多行查询</h2><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.session.defaults.DefaultSqlSession#selectList</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>: 根据条件查询, 返回 list 集合</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">@Override</span></span><br><span class="line"> <span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">selectList</span><span class="params">(String statement, Object parameter)</span> &#123;</span><br><span class="line">   <span class="keyword">return</span> <span class="built_in">this</span>.selectList(statement, parameter, RowBounds.DEFAULT);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="meta">@Override</span></span><br><span class="line"> <span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">selectList</span><span class="params">(String statement, Object parameter, RowBounds rowBounds)</span> &#123;</span><br><span class="line">   <span class="keyword">return</span> selectList(statement, parameter, rowBounds, Executor.NO_RESULT_HANDLER);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">// 核心selectList</span></span><br><span class="line"> <span class="keyword">private</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">selectList</span><span class="params">(String statement, Object parameter, RowBounds rowBounds, ResultHandler handler)</span> &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     <span class="comment">// 根据 statement id 找到对应的 MappedStatement</span></span><br><span class="line">     <span class="type">MappedStatement</span> <span class="variable">ms</span> <span class="operator">=</span> configuration.getMappedStatement(statement);</span><br><span class="line">     <span class="comment">// 转用执行器来查询结果, 注意这里传入的 ResultHandler 是 null</span></span><br><span class="line">     <span class="comment">// 如果存在插件, 即(executor 被代理), 则会执行 org.apache.ibatis.plugin.Plugin#invoke</span></span><br><span class="line">     <span class="keyword">return</span> executor.query(ms, wrapCollection(parameter), rowBounds, handler);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">     <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">&quot;Error querying database.  Cause: &quot;</span> + e, e);</span><br><span class="line">   &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">     <span class="comment">// 清空错误上下文</span></span><br><span class="line">     ErrorContext.instance().reset();</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// 若参数为集合或数组, 则转换成 Map 对象, 否则返回原对象</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">wrapToMapIfCollection</span><span class="params">(Object object, String actualParamName)</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (object <span class="keyword">instanceof</span> Collection) &#123;</span><br><span class="line">     <span class="comment">// 参数若是 Collection 型，做 collection 标记</span></span><br><span class="line">     ParamMap&lt;Object&gt; map = <span class="keyword">new</span> <span class="title class_">ParamMap</span>&lt;&gt;();</span><br><span class="line">     map.put(<span class="string">&quot;collection&quot;</span>, object);</span><br><span class="line">     <span class="keyword">if</span> (object <span class="keyword">instanceof</span> List) &#123;</span><br><span class="line">       <span class="comment">// 参数若是 List 型，做 list 标记</span></span><br><span class="line">       map.put(<span class="string">&quot;list&quot;</span>, object);</span><br><span class="line">     &#125;</span><br><span class="line">     Optional.ofNullable(actualParamName).ifPresent(name -&gt; map.put(name, object));</span><br><span class="line">     <span class="keyword">return</span> map;</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (object != <span class="literal">null</span> &amp;&amp; object.getClass().isArray()) &#123;</span><br><span class="line">     <span class="comment">// 参数若是数组型，做 array 标记</span></span><br><span class="line">     ParamMap&lt;Object&gt; map = <span class="keyword">new</span> <span class="title class_">ParamMap</span>&lt;&gt;();</span><br><span class="line">     map.put(<span class="string">&quot;array&quot;</span>, object);</span><br><span class="line">     Optional.ofNullable(actualParamName).ifPresent(name -&gt; map.put(name, object));</span><br><span class="line">     <span class="keyword">return</span> map;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 参数若不是集合型，直接返回原来值</span></span><br><span class="line">   <span class="keyword">return</span> object;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="插件和拦截器"><a href="#插件和拦截器" class="headerlink" title="插件和拦截器"></a>插件和拦截器</h3><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.plugin.Plugin</code></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.ibatis.plugin.Plugin#invoke</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 获取当前方法所在类或接口中，可被当前Interceptor拦截的方式</span></span><br><span class="line">    Set&lt;Method&gt; methods = signatureMap.get(method.getDeclaringClass());</span><br><span class="line">    <span class="comment">// 如果当前调用的方式需要被拦截，则调用intercept方法进行拦截处理</span></span><br><span class="line">    <span class="keyword">if</span> (methods != <span class="literal">null</span> &amp;&amp; methods.contains(method)) &#123;</span><br><span class="line">      <span class="comment">//调用Interceptor.intercept，也即插入了我们自己的逻辑</span></span><br><span class="line">      <span class="keyword">return</span> interceptor.intercept(<span class="keyword">new</span> <span class="title class_">Invocation</span>(target, method, args));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果当前调用的方法不能被拦截，则调用target对象的相应方法</span></span><br><span class="line">    <span class="keyword">return</span> method.invoke(target, args);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> ExceptionUtil.unwrapThrowable(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">wrap</span><span class="params">(Object target, Interceptor interceptor)</span> &#123;</span><br><span class="line">  <span class="comment">// 获取用户自定义Interceptor中@Signature注解的信息，getSignatureMap方法负责处理@Signture注解</span></span><br><span class="line">  Map&lt;Class&lt;?&gt;, Set&lt;Method&gt;&gt; signatureMap = getSignatureMap(interceptor);</span><br><span class="line">  <span class="comment">// 获取目标类型</span></span><br><span class="line">  Class&lt;?&gt; type = target.getClass();</span><br><span class="line">  <span class="comment">// 获取目标类型实现的接口，拦截器可以拦截的 4 类对象都实现了相应的接口，这也是能使用 JDK 动态代理的方式创建代理对象的基础</span></span><br><span class="line">  <span class="comment">// 支持被拦截的接口有: Executor, StatementHandler, ParameterHandler, ResultSetHandler</span></span><br><span class="line">  Class&lt;?&gt;[] interfaces = getAllInterfaces(type, signatureMap);</span><br><span class="line">  <span class="keyword">if</span> (interfaces.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// 使用 JDK 动态代理的方式创建代理对象</span></span><br><span class="line">    <span class="keyword">return</span> Proxy.newProxyInstance(</span><br><span class="line">        type.getClassLoader(),</span><br><span class="line">        interfaces,</span><br><span class="line">        <span class="comment">// 使用 InvocationHandler 对象就是 Plugin 对象</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Plugin</span>(target, interceptor, signatureMap));</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> target;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 取得签名 Map</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Class&lt;?&gt;, Set&lt;Method&gt;&gt; getSignatureMap(Interceptor interceptor) &#123;</span><br><span class="line">  <span class="comment">// 取 Intercepts 注解</span></span><br><span class="line">  <span class="type">Intercepts</span> <span class="variable">interceptsAnnotation</span> <span class="operator">=</span> interceptor.getClass().getAnnotation(Intercepts.class);</span><br><span class="line">  <span class="comment">// issue #251</span></span><br><span class="line">  <span class="comment">// 必须得有 Intercepts 注解，没有报错</span></span><br><span class="line">  <span class="keyword">if</span> (interceptsAnnotation == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">PluginException</span>(<span class="string">&quot;No @Intercepts annotation was found in interceptor &quot;</span> + interceptor.getClass().getName());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// value 是数组型，Signature 的数组</span></span><br><span class="line">  Signature[] sigs = interceptsAnnotation.value();</span><br><span class="line">  <span class="comment">// 每个 class 里有多个 Method 需要被拦截,所以这么定义</span></span><br><span class="line">  Map&lt;Class&lt;?&gt;, Set&lt;Method&gt;&gt; signatureMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (Signature sig : sigs) &#123;</span><br><span class="line">    Set&lt;Method&gt; methods = MapUtil.computeIfAbsent(signatureMap, sig.type(), k -&gt; <span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;());</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> sig.type().getMethod(sig.method(), sig.args());</span><br><span class="line">      methods.add(method);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">PluginException</span>(<span class="string">&quot;Could not find method on &quot;</span> + sig.type() + <span class="string">&quot; named &quot;</span> + sig.method() + <span class="string">&quot;. Cause: &quot;</span> + e, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> signatureMap;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>自定义拦截器</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 自定义实现拦截器</span></span><br><span class="line"><span class="meta">@Intercepts(&#123;@Signature(type = Executor.class, method = &quot;query&quot;, args = &#123;MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class&#125;)&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyInterceptor</span> <span class="keyword">implements</span> <span class="title class_">Interceptor</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">intercept</span><span class="params">(Invocation invocation)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;-------&quot;</span> + invocation + <span class="string">&quot;================&quot;</span>);</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> invocation.proceed();</span><br><span class="line">    System.out.println(<span class="string">&quot;-------&quot;</span> + result + <span class="string">&quot;================&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="CachingExecutor-查询"><a href="#CachingExecutor-查询" class="headerlink" title="CachingExecutor 查询"></a>CachingExecutor 查询</h3><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.executor.CachingExecutor</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>:  CachingExecutor 作为二级缓存执行器, 添加了缓存机制, 其实际查询逻辑仍然由 <code>BaseExecutor#query</code> 的实现类(即<code>delegate</code>)来执行</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">query</span><span class="params">(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="comment">// 获取 BoundSql 对象</span></span><br><span class="line">  <span class="type">BoundSql</span> <span class="variable">boundSql</span> <span class="operator">=</span> ms.getBoundSql(parameterObject);</span><br><span class="line">  <span class="comment">// 创建 CacheKey 对象</span></span><br><span class="line">  <span class="type">CacheKey</span> <span class="variable">key</span> <span class="operator">=</span> createCacheKey(ms, parameterObject, rowBounds, boundSql);</span><br><span class="line">  <span class="keyword">return</span> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 被 ResultLoader.selectList 调用</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">query</span><span class="params">(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)</span></span><br><span class="line">    <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="comment">// 获取查询语句所在命名空间对应的二级缓存</span></span><br><span class="line">  <span class="type">Cache</span> <span class="variable">cache</span> <span class="operator">=</span> ms.getCache();</span><br><span class="line">  <span class="comment">// 是否开启了二级缓存</span></span><br><span class="line">  <span class="keyword">if</span> (cache != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// 根据 select 节点的配置，决定是否需要清空二级缓存</span></span><br><span class="line">    flushCacheIfRequired(ms);</span><br><span class="line">    <span class="comment">// 检测 SQL 节点的 useCache 配置以及是否使用了 resultHandler 配置</span></span><br><span class="line">    <span class="keyword">if</span> (ms.isUseCache() &amp;&amp; resultHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">// 二级缓存不能保存输出类型的参数，如果查询操作调用了包含输出参数的存储过程，则报错</span></span><br><span class="line">      ensureNoOutParams(ms, boundSql);</span><br><span class="line">      <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">      <span class="comment">// 查询二级缓存</span></span><br><span class="line">      List&lt;E&gt; list = (List&lt;E&gt;) tcm.getObject(cache, key);</span><br><span class="line">      <span class="keyword">if</span> (list == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 二级缓存没有相应的结果集，调用封装的 Executor 对象的 query 方法</span></span><br><span class="line">        list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">        <span class="comment">// 将查询结果保存到 TransactionalCache.entriesToAddOnCommit 集合中</span></span><br><span class="line">        tcm.putObject(cache, key, list); <span class="comment">// issue #578 and #116</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> list;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 没有启动二级缓存，直接调用底层Executor执行数据库查询操作</span></span><br><span class="line">  <span class="keyword">return</span> delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="BaseExecutor-查询"><a href="#BaseExecutor-查询" class="headerlink" title="BaseExecutor 查询"></a>BaseExecutor 查询</h3><blockquote>
+<p><strong>查询</strong>: <code>org.apache.ibatis.executor.BaseExecutor#query</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>: BaseExecutor 的实现类有: SimpleExecutor(简单执行器), ReuseExecutor(重用执行器), BatchExecutor(批处理执行器)</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">query</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">&quot;executing a query&quot;</span>).object(ms.getId());</span><br><span class="line">  <span class="comment">// 检测当前 Executor 是否已经关闭</span></span><br><span class="line">  <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExecutorException</span>(<span class="string">&quot;Executor was closed.&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (queryStack == <span class="number">0</span> &amp;&amp; ms.isFlushCacheRequired()) &#123;</span><br><span class="line">    <span class="comment">// 非嵌套查询，并且 select 节点配置的 flushCache 属性为 true 时，才会清空一级缓存， flushCache 配置项是影响一级缓存中结果对象存活时长的第一个方面</span></span><br><span class="line">    clearLocalCache();</span><br><span class="line">  &#125;</span><br><span class="line">  List&lt;E&gt; list;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 增加查询层数</span></span><br><span class="line">    queryStack++;</span><br><span class="line">    <span class="comment">// 查询一级缓存</span></span><br><span class="line">    list = resultHandler == <span class="literal">null</span> ? (List&lt;E&gt;) localCache.getObject(key) : <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (list != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">// 针对存储过程调用的处理，在一级缓存命中时，获取缓存中保存的输出类型参数，并设置到用户传入的实参对象中</span></span><br><span class="line">      handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 调用 doQuery 方法完成数据库查询，并得到映射后的结果对象</span></span><br><span class="line">      list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="comment">// 当前查询完成，查询层数减少</span></span><br><span class="line">    queryStack--;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (queryStack == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// 在最外层的查询结束时，所有嵌套查询也已经完成，相关缓存项也已经完全记载，所以在此处触发DeferredLoad 加载一级缓存中记录的嵌套查询的结果对象</span></span><br><span class="line">    <span class="keyword">for</span> (DeferredLoad deferredLoad : deferredLoads) &#123;</span><br><span class="line">      deferredLoad.load();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// issue #601</span></span><br><span class="line">    <span class="comment">// 加载完成后，清空deferredLoads集合</span></span><br><span class="line">    deferredLoads.clear();</span><br><span class="line">    <span class="keyword">if</span> (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) &#123;</span><br><span class="line">      <span class="comment">// issue #482</span></span><br><span class="line">      <span class="comment">// 根据 LocalCacheScope 配置决定是否清空一级缓存</span></span><br><span class="line">      clearLocalCache();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> list;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 从数据库查</span></span><br><span class="line"><span class="keyword">private</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">queryFromDatabase</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  List&lt;E&gt; list;</span><br><span class="line">  <span class="comment">// 在缓存中添加占位符</span></span><br><span class="line">  localCache.putObject(key, EXECUTION_PLACEHOLDER);</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 完成数据库查询操作，并返回结果对象</span></span><br><span class="line">    list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="comment">// 删除占位符</span></span><br><span class="line">    localCache.removeObject(key);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 将真正的结果对象添加到一级缓存中</span></span><br><span class="line">  localCache.putObject(key, list);</span><br><span class="line">  <span class="comment">// 是否未存储过程调用</span></span><br><span class="line">  <span class="keyword">if</span> (ms.getStatementType() == StatementType.CALLABLE) &#123;</span><br><span class="line">    <span class="comment">// 缓存输出类型的参数</span></span><br><span class="line">    localOutputParameterCache.putObject(key, parameter);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> list;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建缓存Key</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> CacheKey <span class="title function_">createCacheKey</span><span class="params">(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql)</span> &#123;</span><br><span class="line">  <span class="comment">// 检测当前 executor 是否已经关闭</span></span><br><span class="line">  <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExecutorException</span>(<span class="string">&quot;Executor was closed.&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 创建 CacheKey 对象</span></span><br><span class="line">  <span class="type">CacheKey</span> <span class="variable">cacheKey</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CacheKey</span>();</span><br><span class="line">  <span class="comment">// 将 MappedStatemen t的 id 添加到 CacheKey 对象中</span></span><br><span class="line">  cacheKey.update(ms.getId());</span><br><span class="line">  <span class="comment">// 将 offset 添加到 CacheKey 对象中</span></span><br><span class="line">  cacheKey.update(rowBounds.getOffset());</span><br><span class="line">  <span class="comment">// 将 limit 添加到 CacheKey 对象中</span></span><br><span class="line">  cacheKey.update(rowBounds.getLimit());</span><br><span class="line">  <span class="comment">// 将 sql 添加到 CacheKey 对象中</span></span><br><span class="line">  cacheKey.update(boundSql.getSql());</span><br><span class="line">  List&lt;ParameterMapping&gt; parameterMappings = boundSql.getParameterMappings();</span><br><span class="line">  <span class="type">TypeHandlerRegistry</span> <span class="variable">typeHandlerRegistry</span> <span class="operator">=</span> ms.getConfiguration().getTypeHandlerRegistry();</span><br><span class="line">  <span class="comment">// 获取用户传入的实参，并添加到 CacheKey 对象中</span></span><br><span class="line">  <span class="keyword">for</span> (ParameterMapping parameterMapping : parameterMappings) &#123;</span><br><span class="line">    <span class="keyword">if</span> (parameterMapping.getMode() != ParameterMode.OUT) &#123;</span><br><span class="line">      Object value;</span><br><span class="line">      <span class="type">String</span> <span class="variable">propertyName</span> <span class="operator">=</span> parameterMapping.getProperty();</span><br><span class="line">      <span class="keyword">if</span> (boundSql.hasAdditionalParameter(propertyName)) &#123;</span><br><span class="line">        value = boundSql.getAdditionalParameter(propertyName);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameterObject == <span class="literal">null</span>) &#123;</span><br><span class="line">        value = <span class="literal">null</span>;</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) &#123;</span><br><span class="line">        value = parameterObject;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">MetaObject</span> <span class="variable">metaObject</span> <span class="operator">=</span> configuration.newMetaObject(parameterObject);</span><br><span class="line">        value = metaObject.getValue(propertyName);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 将实参添加到 CacheKey 对象中</span></span><br><span class="line">      cacheKey.update(value);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 如果 environment 的 id 不为空，则将其添加到 CacheKey 中</span></span><br><span class="line">  <span class="keyword">if</span> (configuration.getEnvironment() != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// issue #176</span></span><br><span class="line">    cacheKey.update(configuration.getEnvironment().getId());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> cacheKey;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="SimpleExecutor-查询"><a href="#SimpleExecutor-查询" class="headerlink" title="SimpleExecutor 查询"></a>SimpleExecutor 查询</h3><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.executor.SimpleExecutor#doQuery</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>:  默认实现的查询</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">doQuery</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">Statement</span> <span class="variable">stmt</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 获取配置对象</span></span><br><span class="line">    <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> ms.getConfiguration();</span><br><span class="line">    <span class="comment">// 创建StatementHandler对象，实际返回的是RoutingStatementHandler对象</span></span><br><span class="line">    <span class="type">StatementHandler</span> <span class="variable">handler</span> <span class="operator">=</span> configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">    <span class="comment">// 完成Statement的创建和初始化</span></span><br><span class="line">    stmt = prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">    <span class="comment">// 调用query方法执行sql语句，并通过ResultSetHandler完成结果集的映射</span></span><br><span class="line">    <span class="keyword">return</span> handler.query(stmt, resultHandler);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="comment">// 关闭Statement对象</span></span><br><span class="line">    closeStatement(stmt);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> Statement <span class="title function_">prepareStatement</span><span class="params">(StatementHandler handler, Log statementLog)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  Statement stmt;</span><br><span class="line">  <span class="comment">// 获取数据库连接</span></span><br><span class="line">  <span class="type">Connection</span> <span class="variable">connection</span> <span class="operator">=</span> getConnection(statementLog);</span><br><span class="line">  <span class="comment">// 创建Statement对象</span></span><br><span class="line">  stmt = handler.prepare(connection, transaction.getTimeout());</span><br><span class="line">  <span class="comment">// 处理占位符</span></span><br><span class="line">  handler.parameterize(stmt);</span><br><span class="line">  <span class="keyword">return</span> stmt;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// org.apache.ibatis.session.Configuration#newStatementHandler</span></span><br><span class="line"><span class="comment">// 创建语句处理器</span></span><br><span class="line"><span class="keyword">public</span> StatementHandler <span class="title function_">newStatementHandler</span><span class="params">(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> &#123;</span><br><span class="line">  <span class="comment">// 创建路由选择语句处理器</span></span><br><span class="line">  <span class="comment">// 根据 MappedStatement 的配置，生成一个对应的 StatementHandler 对象</span></span><br><span class="line">  <span class="comment">// SimpleStatementHandler, PreparedStatementHandler, CallableStatementHandler</span></span><br><span class="line">  <span class="type">StatementHandler</span> <span class="variable">statementHandler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RoutingStatementHandler</span>(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);</span><br><span class="line">  <span class="comment">// 引入插件</span></span><br><span class="line">  statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);</span><br><span class="line">  <span class="keyword">return</span> statementHandler;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="PreparedStatementHandler-查询"><a href="#PreparedStatementHandler-查询" class="headerlink" title="PreparedStatementHandler 查询"></a>PreparedStatementHandler 查询</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 准备语句</span></span><br><span class="line"><span class="keyword">public</span> Statement <span class="title function_">prepare</span><span class="params">(Connection connection, Integer transactionTimeout)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  ErrorContext.instance().sql(boundSql.getSql());</span><br><span class="line">  <span class="type">Statement</span> <span class="variable">statement</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 实例化 Statement</span></span><br><span class="line">    statement = instantiateStatement(connection);</span><br><span class="line">    <span class="comment">// 设置超时</span></span><br><span class="line">    setStatementTimeout(statement, transactionTimeout);</span><br><span class="line">    <span class="comment">// 设置读取条数</span></span><br><span class="line">    setFetchSize(statement);</span><br><span class="line">    <span class="keyword">return</span> statement;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">    closeStatement(statement);</span><br><span class="line">    <span class="keyword">throw</span> e;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    closeStatement(statement);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ExecutorException</span>(<span class="string">&quot;Error preparing statement.  Cause: &quot;</span> + e, e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 执行数据库查询</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; List&lt;E&gt; <span class="title function_">query</span><span class="params">(Statement statement, ResultHandler resultHandler)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">PreparedStatement</span> <span class="variable">ps</span> <span class="operator">=</span> (PreparedStatement) statement;</span><br><span class="line">  <span class="comment">// 执行 jdbc 的查询</span></span><br><span class="line">  ps.execute();</span><br><span class="line">  <span class="comment">// 解析返回结果</span></span><br><span class="line">  <span class="keyword">return</span> resultSetHandler.handleResultSets(ps);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="多行查询-map"><a href="#多行查询-map" class="headerlink" title="多行查询(map)"></a>多行查询(map)</h2><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.session.defaults.DefaultSqlSession#selectMap</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>: 根据条件查询, 返回 map 对象, key 为 @MapKey 指定列, value 为查询列对象; 与多行查询的不同点在于, 返回结果</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;K, V&gt; Map&lt;K, V&gt; <span class="title function_">selectMap</span><span class="params">(String statement, Object parameter, String mapKey)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">this</span>.selectMap(statement, parameter, mapKey, RowBounds.DEFAULT);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 核心selectMap</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;K, V&gt; Map&lt;K, V&gt; <span class="title function_">selectMap</span><span class="params">(String statement, Object parameter, String mapKey, RowBounds rowBounds)</span> &#123;</span><br><span class="line">  <span class="comment">// 调用 selectList, 此方法实现参考&quot;多行查询&quot;介绍</span></span><br><span class="line">  <span class="keyword">final</span> List&lt;? <span class="keyword">extends</span> <span class="title class_">V</span>&gt; list = selectList(statement, parameter, rowBounds);</span><br><span class="line">  <span class="keyword">final</span> DefaultMapResultHandler&lt;K, V&gt; mapResultHandler = <span class="keyword">new</span> <span class="title class_">DefaultMapResultHandler</span>&lt;&gt;(mapKey,</span><br><span class="line">          configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());</span><br><span class="line">  <span class="keyword">final</span> DefaultResultContext&lt;V&gt; context = <span class="keyword">new</span> <span class="title class_">DefaultResultContext</span>&lt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (V o : list) &#123;</span><br><span class="line">    <span class="comment">// 循环用 DefaultMapResultHandler 处理每条记录</span></span><br><span class="line">    context.nextResultObject(o);</span><br><span class="line">    mapResultHandler.handleResult(context);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 注意这个 DefaultMapResultHandler 里面存了所有已处理的记录(内部实现可能就是一个Map)，最后再返回一个 Map</span></span><br><span class="line">  <span class="keyword">return</span> mapResultHandler.getMappedResults();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="游标查询"><a href="#游标查询" class="headerlink" title="游标查询"></a>游标查询</h2><blockquote>
+<p><strong>定位</strong>: <code>org.apache.ibatis.session.defaults.DefaultSqlSession#selectCursor</code></p>
+</blockquote>
+<blockquote>
+<p><strong>作用</strong>: 根据条件查询, 返回游标</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; Cursor&lt;T&gt; <span class="title function_">selectCursor</span><span class="params">(String statement, Object parameter)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> selectCursor(statement, parameter, RowBounds.DEFAULT);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; Cursor&lt;T&gt; <span class="title function_">selectCursor</span><span class="params">(String statement, Object parameter, RowBounds rowBounds)</span> &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">MappedStatement</span> <span class="variable">ms</span> <span class="operator">=</span> configuration.getMappedStatement(statement);</span><br><span class="line">    Cursor&lt;T&gt; cursor = executor.queryCursor(ms, wrapCollection(parameter), rowBounds);</span><br><span class="line">    registerCursor(cursor);</span><br><span class="line">    <span class="keyword">return</span> cursor;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">&quot;Error querying database.  Cause: &quot;</span> + e, e);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    ErrorContext.instance().reset();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="CachingExecutor-游标查询"><a href="#CachingExecutor-游标查询" class="headerlink" title="CachingExecutor 游标查询"></a>CachingExecutor 游标查询</h3><p><strong>定位</strong>: <code>org.apache.ibatis.executor.CachingExecutor#queryCursor</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; Cursor&lt;E&gt; <span class="title function_">queryCursor</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  flushCacheIfRequired(ms);</span><br><span class="line">  <span class="comment">// 没有二级缓存</span></span><br><span class="line">  <span class="keyword">return</span> delegate.queryCursor(ms, parameter, rowBounds);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="BaseExecutor-游标查询"><a href="#BaseExecutor-游标查询" class="headerlink" title="BaseExecutor 游标查询"></a>BaseExecutor 游标查询</h3><p><strong>定位</strong>: <code>org.apache.ibatis.executor.BaseExecutor#queryCursor</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; Cursor&lt;E&gt; <span class="title function_">queryCursor</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">BoundSql</span> <span class="variable">boundSql</span> <span class="operator">=</span> ms.getBoundSql(parameter);</span><br><span class="line">  <span class="keyword">return</span> doQueryCursor(ms, parameter, rowBounds, boundSql);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="SimpleExecutor-游标查询"><a href="#SimpleExecutor-游标查询" class="headerlink" title="SimpleExecutor 游标查询"></a>SimpleExecutor 游标查询</h3><p><strong>定位</strong>: <code>org.apache.ibatis.executor.SimpleExecutor#doQueryCursor</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> &lt;E&gt; Cursor&lt;E&gt; <span class="title function_">doQueryCursor</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> ms.getConfiguration();</span><br><span class="line">  <span class="type">StatementHandler</span> <span class="variable">handler</span> <span class="operator">=</span> configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, <span class="literal">null</span>, boundSql);</span><br><span class="line">  <span class="type">Statement</span> <span class="variable">stmt</span> <span class="operator">=</span> prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">  Cursor&lt;E&gt; cursor = handler.queryCursor(stmt);</span><br><span class="line">  stmt.closeOnCompletion();</span><br><span class="line">  <span class="keyword">return</span> cursor;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="PreparedStatementHandler-游标查询"><a href="#PreparedStatementHandler-游标查询" class="headerlink" title="PreparedStatementHandler 游标查询"></a>PreparedStatementHandler 游标查询</h3><p><strong>定位</strong>: <code>org.apache.ibatis.executor.statement.PreparedStatementHandler#queryCursor</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; Cursor&lt;E&gt; <span class="title function_">queryCursor</span><span class="params">(Statement statement)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">PreparedStatement</span> <span class="variable">ps</span> <span class="operator">=</span> (PreparedStatement) statement;</span><br><span class="line">  ps.execute();</span><br><span class="line">  <span class="keyword">return</span> resultSetHandler.handleCursorResultSets(ps);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Mybatis/" rel="tag"># Mybatis</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/26/Mybatis/Mybatis06/" rel="prev" title="Mybatis 源码之数据库结果集">
+                  <i class="fa fa-angle-left"></i> Mybatis 源码之数据库结果集
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/26/Mybatis/Mybatis04/" rel="next" title="Mybatis 源码之 Mapper 实例">
+                  Mybatis 源码之 Mapper 实例 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Devin Li</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
